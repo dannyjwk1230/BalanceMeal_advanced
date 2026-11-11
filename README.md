@@ -1,0 +1,145 @@
+# BalanceMeal
+
+모바일소프트웨어 프로젝트 · **정연호 · 최서윤**
+
+## 앱 소개
+
+BalanceMeal은 음식과 섭취량을 기록하고 탄수화물·단백질·지방 및 칼로리를 확인하는 Android 식단 관리 앱입니다. 신체 정보를 저장하면 오늘의 섭취량을 하루 참고 목표와 비교할 수 있습니다.
+
+- **홈:** 오늘 저장한 식단의 영양 합계, 권장 범위와 부족·적정·과다 상태, 영양 피드백을 표시합니다.
+- **기록:** 날짜·끼니 선택, 음식 검색·추가·삭제, g/ml 섭취량 입력, 갤러리·카메라 사진 첨부, 식단 저장·변경·삭제를 제공합니다.
+- **마이:** 프로필 사진을 눌러 변경하고 닉네임과 함께 저장합니다. 생년월일·성별·키·체중·활동 수준 및 목표 계산 적용 여부를 설정합니다.
+- **목록·분석:** 화면과 상태·이벤트 구조가 준비되어 있습니다. **실제 기간 조회, 목록 펼침·상세 이동, 기간별 영양 집계와 목표 비교는 아직 연결되지 않았습니다.**
+
+단일 로컬 계정으로 동작하며 로그인·서버·API 키 없이 사용할 수 있습니다. 저장한 식단은 Room, 프로필·신체 정보는 DataStore, 사진은 앱 내부 저장소에 보관합니다.
+
+**기술:** Kotlin · Jetpack Compose / Material 3 · ViewModel / StateFlow · Navigation Compose · Room · Preferences DataStore
+
+## 설치 및 실행 방법
+
+### 준비 환경
+
+| 항목 | 프로젝트 설정 |
+| --- | --- |
+| Android Studio | AGP 9.5.1 프로젝트를 지원하는 버전 |
+| Android SDK | Android API 37 플랫폼 및 SDK Platform-Tools |
+| 실행 기기 | Android 7.0(API 24) 이상 실기기 또는 에뮬레이터 |
+| Gradle Daemon JDK | 25 (`gradle/gradle-daemon-jvm.properties` 기준) |
+| 빌드 도구 | Gradle Wrapper 9.6.0 · AGP 9.5.1 |
+| Kotlin / Compose BOM | 2.2.10 / 2026.02.01 |
+
+최초 빌드에는 Gradle·의존성 다운로드를 위한 인터넷 연결이 필요합니다. 앱 실행에는 서버 연결이 필요하지 않습니다.
+
+### Android Studio에서 실행
+
+1. 저장소를 복제합니다.
+   ```bash
+   git clone https://github.com/dannyjwk1230/BalanceMeal_advanced.git
+   cd BalanceMeal_advanced
+   ```
+2. Android Studio에서 `settings.gradle.kts`가 있는 프로젝트 루트를 엽니다.
+3. SDK Manager에서 API 37을 설치하고 Gradle Sync를 실행합니다. JDK 25가 없으면 설치하고 Gradle JDK 설정을 확인합니다.
+4. SDK 경로는 Android Studio가 생성하는 `local.properties`를 사용합니다. 이 파일은 컴퓨터마다 다르므로 Git에 포함하지 않습니다.
+5. 에뮬레이터 또는 USB 디버깅이 켜진 기기를 선택하고 실행 구성 **app → Run**을 누릅니다.
+
+### 명령줄에서 빌드·설치
+
+Windows PowerShell의 프로젝트 루트에서:
+
+```powershell
+.\gradlew.bat :app:assembleDebug
+adb install -r app/build/outputs/apk/debug/app-debug.apk
+adb shell am start -n com.example.balancemeal_advanced/.MainActivity
+```
+
+macOS/Linux에서는 `./gradlew :app:assembleDebug`를 사용합니다. APK 생성 위치는 같습니다. `adb`는 SDK의 `platform-tools`에 있으며 PATH에 등록하거나 해당 실행 파일의 전체 경로를 사용합니다.
+
+사진 선택에는 이미지를 제공하는 갤러리·파일 선택 앱, 사진 촬영에는 카메라 앱이 필요합니다. 에뮬레이터에 사진을 넣거나 가상 카메라를 설정하면 해당 기능을 확인할 수 있습니다.
+
+### 간단한 사용 순서
+
+1. **마이**에서 신체 정보를 입력하고 저장합니다. 목표 계산은 만 19세 이상을 대상으로 합니다.
+2. **기록**에서 날짜·끼니를 선택하고 음식을 검색해 0보다 큰 섭취량을 입력합니다.
+3. 식단을 저장한 뒤 **홈**에서 오늘의 합계와 목표 비교를 확인합니다.
+4. 기존 날짜·끼니를 다시 열어 변경하거나, 모든 음식을 제거한 후 식단을 삭제할 수 있습니다.
+
+앱 삭제 또는 앱 데이터 초기화 시 로컬 기록이 사라집니다. 일반 업데이트는 `adb install -r`로 진행합니다.
+
+### 검증 명령
+
+```powershell
+# APK, 단위 테스트, 정적 검사, 기기 테스트 APK 빌드
+.\gradlew.bat :app:assembleDebug :app:testDebugUnitTest :app:lintDebug :app:assembleDebugAndroidTest
+
+# 기기를 연결한 상태에서 UI·저장소 테스트 실행
+.\gradlew.bat :app:connectedDebugAndroidTest
+```
+
+이번 제출 정리 시 실행한 결과와 추가 확인 항목은 [통합 인수인계 문서](docs/TEAM_HANDOFF.md#검증과-시연)에 기록합니다. 기기 테스트 APK 빌드와 실제 기기 테스트 실행은 별도입니다.
+
+## 영양 데이터 출처
+
+| 구분 | 출처 및 앱 적용 방식 |
+| --- | --- |
+| 음식 영양 데이터 | **식품의약품안전처**. 공식 안내: [K-FIND 식품영양성분 데이터베이스](https://various.foodsafetykorea.go.kr/nutrient/index.do). 앱은 제공된 100개 음식의 [foods_sample.json](app/src/main/assets/foods_sample.json)을 읽습니다. |
+| 하루 참고 목표 | **보건복지부·한국영양학회, 한국인 영양소 섭취기준**을 참고한 프로젝트 명세의 성인 EER·활동 계수·영양소 범위를 적용합니다. 공식 자료는 [한국영양학회 KDRIs 자료실](https://www.kns.or.kr/fileroom/fileroom_view.asp?BoardID=Kdr&idx=167)에서 확인할 수 있습니다. |
+
+- 음식 데이터는 100g 기준 80개와 100ml 기준 20개입니다. 실시간 외부 API를 호출하지 않습니다.
+- 영양 성분과 칼로리는 원본의 100g/100ml 값에 `섭취량 ÷ 100`을 곱합니다. ml를 g으로 변환하거나 칼로리를 탄단지로 다시 계산하지 않습니다.
+- 참고 목표는 앱에 구현된 계산식과 범위를 사용합니다. 공식 자료의 최신판 전체를 구현한 것으로 해석하지 않습니다. 데이터 원본에는 개별 항목의 수집일·원본 DB 판본 정보가 포함되어 있지 않습니다.
+- 목표와 영양 피드백은 참고용 추정치입니다.
+
+## 역할분담
+
+| 팀원 | 담당 범위 | 현재 상태 |
+| --- | --- | --- |
+| **정연호** | 앱 공통 구조·모델·저장소, 공통 테마·상단바·내비게이션, 홈·기록·마이 기능, 사진 저장과 미저장 이동 확인, UI 보정·통합 검증·문서 정리 | 실행 소스에 반영. 목록·분석은 공통 UI와 상태·이벤트 구조까지 마련 |
+| **최서윤** | 식단 목록·식단 상세·분석의 실제 데이터 조회, 기간 선택·집계·목표 비교 및 관련 상호작용 | 후속 구현·통합 담당. 현재 제출 코드에는 실제 동작 미연결 |
+
+역할은 현재 코드와 기존 인수인계에 정리된 담당 경계를 기준으로 작성했습니다.
+
+## 팀원 별 vibe coding 사용 목록
+
+### 정연호
+
+원본 프롬프트: [모바일소프트웨어_프롬프트_정연호.docx](app/모바일소프트웨어_프롬프트_정연호.docx)
+
+| 사용 도구 | 사용 작업 |
+| --- | --- |
+| Google Stitch | 주요 5개 화면·세부 상태·적응형 UI 시안 생성, 공통 디자인 시스템 정리 |
+| Android Studio Agent | P01 기존 프로젝트·MCP 연결 점검, P02 디자인 기준 자료 정리 |
+| Android Studio Agent | P03 공통 모델·음식 저장소·Room·DataStore 기반 구현 |
+| Android Studio Agent | P04 공통 테마·내비게이션·목록/분석 UI 및 상태·이벤트 계약 구현 |
+| Android Studio Agent | P05 프로필·신체 정보·목표량, P06 음식 입력과 기록 초안 구현 |
+| Android Studio Agent | P07 식단 저장·변경·삭제·사진·미저장 이동 보호 구현 |
+| Android Studio Agent | P08 홈 실제 섭취량·목표·코멘트 연동 |
+| Android Studio Agent | P09 적응형 UI·시각 비교, P10 통합 검증·인수인계 정리 |
+| Android Studio Agent | 상단바 보정, 홈 영양 진행 막대·권장 범위·상태 표시·최댓값 처리, 식사 시간 필드 제거, 공용 휠 날짜 선택기, 신체 정보 계산 토글 |
+
+이 대화에서 추가로 진행한 보정: 프로필 사진·닉네임 일괄 저장과 미저장 확인, 버튼 문구·크기·색상, 섭취량·키·체중 오류 표시, 생년월일 미선택 표시, 제출 문서·GitHub 업로드 준비. 이 항목들은 워드 원본 이후의 추가 작업으로 구분합니다.
+
+### 최서윤
+
+**프롬프트 및 vibe coding 사용 내역: 추후 추가 예정.** 현재는 도구·프롬프트·결과를 임의로 기재하지 않습니다.
+
+## 제출 파일 구성
+
+```text
+BalanceMeal_advanced/
+├── README.md                   # 앱 소개·실행·출처·역할·vibe coding 내역
+├── docs/TEAM_HANDOFF.md         # 통합 인수인계 문서 1개
+├── app/
+│   ├── build.gradle.kts
+│   ├── schemas/                # Room 스키마 이력
+│   ├── src/main/               # 실행 소스·리소스·음식 데이터
+│   ├── src/debug/              # Compose Preview
+│   ├── src/test/               # 로컬 단위 테스트
+│   ├── src/androidTest/        # 기기 UI·저장소 테스트
+│   └── 모바일소프트웨어_프롬프트_정연호.docx
+├── gradle/                     # 버전 카탈로그·JDK 설정·Wrapper
+├── gradlew / gradlew.bat
+├── build.gradle.kts / settings.gradle.kts / gradle.properties
+└── .gitignore / .gitattributes
+```
+
+빌드 결과물·캐시·개인 SDK 경로·IDE 설정·단계별 실행 로그·중복 명세와 디자인 캡처는 업로드 대상에서 제외합니다. 인수인계는 **[docs/TEAM_HANDOFF.md](docs/TEAM_HANDOFF.md)** 한 파일로 통합합니다.

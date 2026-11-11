@@ -1,0 +1,9 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- AGP supplies/updates the first runner; keep the explicit smoke runner separate. -->
+    <instrumentation android:name="androidx.test.runner.AndroidJUnitRunner"
+        android:targetPackage="com.example.balancemeal_advanced" />
+    <instrumentation android:name="com.example.balancemeal_advanced.ui.P07SmokeInstrumentation"
+        android:targetPackage="com.example.balancemeal_advanced" android:label="P07 isolated restart smoke helper" />
+    <instrumentation android:name="com.example.balancemeal_advanced.ui.P10RestartInstrumentation"
+        android:targetPackage="com.example.balancemeal_advanced" android:label="P10 isolated account restart check" />
+</manifest>

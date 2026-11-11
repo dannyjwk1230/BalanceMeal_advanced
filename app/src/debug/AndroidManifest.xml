@@ -1,0 +1,3 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application><activity android:name="com.example.balancemeal_advanced.ui.P07TestActivity" android:exported="false" android:windowSoftInputMode="adjustResize" /></application>
+</manifest>
