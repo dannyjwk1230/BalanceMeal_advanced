@@ -22,7 +22,7 @@
 !/app/build.gradle.kts
 !/app/schemas/
 !/app/src/
-!/app/모바일소프트웨어_프롬프트_정연호.docx
+!/app/BalanceMeal_프롬프트목록_정연호.md
 
 # Runtime, previews, and reproducible tests. Exclude duplicate input/spec documents.
 /app/src/*
