@@ -17,6 +17,7 @@ class HomeViewModelTest {
     private class Meals:MealRepository {
         val records=MutableStateFlow<List<MealRecord>>(emptyList());var active=0;var fail=false
         override fun observeOnDate(date:LocalDate)=flow {active++;try {if(fail)error("injected read failure");emitAll(records.map {it.filter {it.date==date}})} finally {active--}}
+        override fun observeBetweenDates(start: LocalDate, end: LocalDate) = flow { emitAll(records.map { it.filter { r -> !r.date.isBefore(start) && !r.date.isAfter(end) } }) }
         override fun observeMeal(date:LocalDate,mealType:MealType)=flowOf<MealRecord?>(null)
         override suspend fun getMeal(date:LocalDate,mealType:MealType)=records.value.firstOrNull {it.date==date && it.mealType==mealType}
         override suspend fun getMeal(id:String)=records.value.firstOrNull {it.id==id}

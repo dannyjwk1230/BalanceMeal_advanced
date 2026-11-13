@@ -26,6 +26,8 @@ data class MealListUiState(
     val period: PeriodUiState = PeriodUiState(),
     val content: MealListContent = MealListContent.INITIAL,
     val dates: List<MealDateUiState> = emptyList(),
+    val selectedDetail: MealDetailUiState? = null,
+    val showDatePicker: Boolean = false,
 )
 sealed interface MealListEvent {
     data class PeriodSelected(val period: PeriodTab) : MealListEvent

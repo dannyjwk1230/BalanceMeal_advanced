@@ -28,6 +28,7 @@ class RecordDraftTest {
         }
         override suspend fun getMeal(id:String)=records.values.firstOrNull {it.id==id}
         override fun observeOnDate(date:LocalDate)=flowOf(records.values.filter {it.date==date})
+        override fun observeBetweenDates(start: LocalDate, end: LocalDate) = flowOf(records.values.filter { !it.date.isBefore(start) && !it.date.isAfter(end) })
         override fun observeMeal(date:LocalDate,mealType:MealType)=flowOf(records[RecordKey(date,mealType)])
         override suspend fun createMeal(date:LocalDate,mealType:MealType,items:List<MealItem>,photoReference:String?):MealRecord { writes++;error("P06 must never save") }
         override suspend fun updateMeal(record:MealRecord):MealRecord { writes++;error("P06 must never update") }
