@@ -67,7 +67,7 @@ GlassCard(Modifier.fillMaxWidth(),radius=16.dp) {
             else MealPhotoPlaceholder(Modifier.fillMaxWidth().height(192.dp),showCamera=true)
             FlowRow(horizontalArrangement=Arrangement.spacedBy(8.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
                 Row(
-                    modifier = Modifier.width(IntrinsicSize.Max),
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     Button(onGallery,enabled=!locked && !state.loading,modifier=Modifier.weight(1f).testTag("record_gallery")) {Text("갤러리 선택")}
@@ -80,7 +80,7 @@ GlassCard(Modifier.fillMaxWidth(),radius=16.dp) {
         } 
  
     },secondary={
-        FlowRow(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(16.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
+        Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween,verticalAlignment=androidx.compose.ui.Alignment.CenterVertically) {
             Text("추가한 음식 (${state.rows.size}개)",style=MaterialTheme.typography.titleMedium)
             Button(onOpenPicker,enabled=!state.loading && state.error==null && !locked,modifier=Modifier.testTag("record_add_food")) { Text("+ 음식 추가") }
         } 
