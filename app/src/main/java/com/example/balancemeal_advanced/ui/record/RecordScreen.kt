@@ -36,7 +36,9 @@ fun RecordScreen(
     onGallery:()->Unit={},onCamera:()->Unit={},onRemovePhoto:()->Unit={},
 ) {
     val locked=state.saving || state.photoBusy || state.leaving || state.dialog!=null
-    AdaptivePage("destination_RECORD",primary={
+    AdaptivePage("destination_RECORD",header={
+        Text("식단 기록", style = MaterialTheme.typography.headlineLarge)
+    },primary={
 GlassCard(Modifier.fillMaxWidth(),radius=16.dp) {
             Text("식사 날짜",style=MaterialTheme.typography.titleMedium)
             OutlinedButton(

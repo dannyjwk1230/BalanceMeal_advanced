@@ -53,7 +53,11 @@ fun MyScreen(
     val requester = remember { BringIntoViewRequester() }
     LaunchedEffect(focusBody, entry) { if (focusBody) { withFrameNanos { }; requester.bringIntoView() } }
     val editable = state.loaded && !state.busy && state.dialog == null
-    val chipColors=FilterChipDefaults.filterChipColors(containerColor=androidx.compose.ui.graphics.Color.White.copy(alpha=.85f),labelColor=BalanceColors.SecondaryText,selectedContainerColor=BalanceColors.Mint,selectedLabelColor=androidx.compose.ui.graphics.Color.White)
+    val bodyDisabled = state.savedBody?.calculationEnabled == false
+    val bodyAccent = if (bodyDisabled) BalanceColors.SecondaryText else BalanceColors.Mint
+    val bodyAccentBorder = if (bodyDisabled) BalanceColors.SecondaryText else BalanceColors.MintDark
+    val bodyColors = MaterialTheme.colorScheme.copy(primary = bodyAccent)
+    val chipColors=FilterChipDefaults.filterChipColors(containerColor=androidx.compose.ui.graphics.Color.White.copy(alpha=.85f),labelColor=BalanceColors.SecondaryText,selectedContainerColor=bodyAccent,selectedLabelColor=androidx.compose.ui.graphics.Color.White)
     AdaptivePage("destination_MY",header={
         GlassCard(Modifier.fillMaxWidth(), radius = 16.dp) {
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -69,6 +73,7 @@ fun MyScreen(
         }
 
     },primary={
+        MaterialTheme(colorScheme = bodyColors) {
         GlassCard(Modifier.fillMaxWidth().bringIntoViewRequester(requester).testTag("my_body_settings"), radius = 16.dp) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -97,7 +102,7 @@ fun MyScreen(
             Text("성별")
             FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Sex.entries.forEach { sex -> FilterChip(state.draft.sex == sex, { onDraft(state.draft.copy(sex = sex)) }, label = { Text(if (sex == Sex.MALE) "남성" else "여성") }, enabled = editable,colors=chipColors,
-                    border=BorderStroke(1.dp,if(state.draft.sex==sex) BalanceColors.MintDark.copy(alpha=.55f) else BalanceColors.Outline.copy(alpha=.25f))) }
+                    border=BorderStroke(1.dp,if(state.draft.sex==sex) bodyAccentBorder.copy(alpha=.55f) else BalanceColors.Outline.copy(alpha=.25f))) }
             }
             val heightInput:@Composable (Modifier)->Unit={fieldModifier->
                 AppTextField(state.draft.height, { onDraft(state.draft.copy(height = it)) }, label = "키", suffix = "cm", enabled = editable, isError = state.loaded && state.draft.height.toDoubleOrNull()?.let { it.isFinite() && it > 0.0 } != true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = fieldModifier.testTag("body_height"))
@@ -114,12 +119,13 @@ fun MyScreen(
             // Wrap rather than clipping four source segments on narrow windows/font scaling.
             FlowRow(horizontalArrangement=Arrangement.spacedBy(8.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
                 ActivityLevel.entries.forEach { level -> FilterChip(state.draft.activity == level, { onDraft(state.draft.copy(activity = level)) }, label = { Text(level.label()) }, enabled = editable,colors=chipColors,
-                    border=BorderStroke(1.dp,if(state.draft.activity==level) BalanceColors.MintDark.copy(alpha=.55f) else BalanceColors.Outline.copy(alpha=.25f))) }
+                    border=BorderStroke(1.dp,if(state.draft.activity==level) bodyAccentBorder.copy(alpha=.55f) else BalanceColors.Outline.copy(alpha=.25f))) }
             }
             state.draft.activity?.let { Text(it.description(), style = MaterialTheme.typography.bodyMedium) }
-            Button(onRequestBody, enabled = editable, modifier = Modifier.fillMaxWidth().testTag("body_save")) { Text("신체 정보 저장하기") }
+            Button(onRequestBody, enabled = editable, modifier = Modifier.fillMaxWidth().testTag("body_save")) { Text("신체 정보 저장") }
             state.error?.let { Text(it, color = MaterialTheme.colorScheme.error, modifier = Modifier.testTag("settings_error")) }
             if (!state.loaded) Text("설정을 불러오는 중입니다.")
+        }
         }
 
     },secondary={

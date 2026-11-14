@@ -21,7 +21,7 @@ import java.time.LocalDate
 private fun nutrition(c: Double, p: Double, f: Double, kcal: Double) =
     NutritionUiState.from(NutrientAmounts(c, p, f, kcal))
 private fun period() = PeriodUiState(
-    PeriodTab.WEEK, "2025.05.08 ~ 2025.05.14", "7일 중 4일 기록 기준 하루 평균",
+    PeriodTab.WEEK, "2025.05.08 ~ 2025.05.14", "종료일을 입력해주세요",
 )
 
 @Composable

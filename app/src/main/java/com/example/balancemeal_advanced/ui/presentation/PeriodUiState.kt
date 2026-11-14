@@ -5,6 +5,6 @@ enum class PeriodTab(val label: String) { DAY("일 (1일)"), WEEK("주 (7일)"),
 data class PeriodUiState(
     val selected: PeriodTab = PeriodTab.WEEK,
     val rangeLabel: String = "기간을 선택해주세요",
-    val description: String = "일 · 주 · 월",
+    val description: String = "종료일을 입력해주세요",
 )
 

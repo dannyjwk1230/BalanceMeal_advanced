@@ -14,6 +14,13 @@ data class MealRowUiState(
     val energyLabel: String,
     val nutrientSummary: String,
     val expanded: Boolean = false,
+    val items: List<MealFoodRowUiState> = emptyList(),
+)
+data class MealFoodRowUiState(
+    val name: String,
+    val amountLabel: String,
+    val energyLabel: String,
+    val nutrientSummary: String,
 )
 data class MealDateUiState(
     val date: LocalDate,

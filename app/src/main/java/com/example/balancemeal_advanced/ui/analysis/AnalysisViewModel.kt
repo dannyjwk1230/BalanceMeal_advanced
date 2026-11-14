@@ -33,14 +33,15 @@ class AnalysisViewModel(
             period = PeriodUiState(
                 selected = PeriodTab.MONTH,
                 rangeLabel = "",
-                description = "최근 1개월"
+                description = "종료일을 입력해주세요"
             )
         )
     )
     val state: StateFlow<AnalysisUiState> = _state.asStateFlow()
 
     private var currentStart: LocalDate = timeSource.now().toLocalDate().minusMonths(1)
-    private var currentEnd: LocalDate = timeSource.now().toLocalDate()
+    var currentEnd: LocalDate = timeSource.now().toLocalDate()
+        private set
 
     init {
         updateDateRange(currentStart, currentEnd)
@@ -160,7 +161,7 @@ class AnalysisViewModel(
 
         val formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd")
         val label = "${start.format(formatter)} ~ ${end.format(formatter)}"
-        val description = tab?.label ?: "직접 설정"
+        val description = "종료일을 입력해주세요"
 
         _state.update {
             it.copy(
@@ -191,7 +192,17 @@ class AnalysisViewModel(
                 _state.update { it.copy(showDatePicker = true) }
             }
             is AnalysisEvent.RangeSubmitted -> {
-                updateDateRange(event.start, event.end)
+                if (event.start == event.end) {
+                    val endDate = event.end
+                    val (calculatedStart, tab) = when (_state.value.period.selected) {
+                        PeriodTab.DAY -> endDate to PeriodTab.DAY
+                        PeriodTab.WEEK -> endDate.minusWeeks(1) to PeriodTab.WEEK
+                        PeriodTab.MONTH -> endDate.minusMonths(1) to PeriodTab.MONTH
+                    }
+                    updateDateRange(calculatedStart, endDate, tab)
+                } else {
+                    updateDateRange(event.start, event.end)
+                }
             }
             is AnalysisEvent.BodySettingsRequested -> {
                 // To be intercepted in UI to trigger navigation

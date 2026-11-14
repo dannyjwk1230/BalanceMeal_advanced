@@ -138,4 +138,32 @@ class AnalysisViewModelTest {
         assertTrue(vm.state.value.showDatePicker)
         sub.cancel()
     }
+
+    @Test fun rangeSubmittedCalculatesPeriodBasedOnSelectedTab() = scenario { vm, _, _, _ ->
+        val sub = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect() }
+        val targetEnd = LocalDate.of(2026, 5, 20)
+
+        vm.handleEvent(AnalysisEvent.PeriodSelected(PeriodTab.WEEK))
+        runCurrent()
+        vm.handleEvent(AnalysisEvent.RangeSubmitted(targetEnd, targetEnd))
+        runCurrent()
+        assertEquals(PeriodTab.WEEK, vm.state.value.period.selected)
+        assertTrue(vm.state.value.period.rangeLabel.contains("2026.05.13 ~ 2026.05.20"))
+
+        vm.handleEvent(AnalysisEvent.PeriodSelected(PeriodTab.MONTH))
+        runCurrent()
+        vm.handleEvent(AnalysisEvent.RangeSubmitted(targetEnd, targetEnd))
+        runCurrent()
+        assertEquals(PeriodTab.MONTH, vm.state.value.period.selected)
+        assertTrue(vm.state.value.period.rangeLabel.contains("2026.04.20 ~ 2026.05.20"))
+
+        vm.handleEvent(AnalysisEvent.PeriodSelected(PeriodTab.DAY))
+        runCurrent()
+        vm.handleEvent(AnalysisEvent.RangeSubmitted(targetEnd, targetEnd))
+        runCurrent()
+        assertEquals(PeriodTab.DAY, vm.state.value.period.selected)
+        assertTrue(vm.state.value.period.rangeLabel.contains("2026.05.20 ~ 2026.05.20"))
+
+        sub.cancel()
+    }
 }

@@ -204,7 +204,7 @@ fun BalanceMealApp(
                             if (listState.showDatePicker) {
                                 WheelDatePicker(
                                     mode = DatePickerMode.MEAL,
-                                    initialDate = dependencies.time.now().toLocalDate(),
+                                    initialDate = listViewModel.currentEnd,
                                     today = dependencies.time.now().toLocalDate(),
                                     onSelect = { dateStr -> 
                                         val d = LocalDate.parse(dateStr)
@@ -231,7 +231,7 @@ fun BalanceMealApp(
                             if (analysisState.showDatePicker) {
                                 WheelDatePicker(
                                     mode = DatePickerMode.MEAL,
-                                    initialDate = dependencies.time.now().toLocalDate(),
+                                    initialDate = analysisViewModel.currentEnd,
                                     today = dependencies.time.now().toLocalDate(),
                                     onSelect = { dateStr ->
                                         val d = LocalDate.parse(dateStr)

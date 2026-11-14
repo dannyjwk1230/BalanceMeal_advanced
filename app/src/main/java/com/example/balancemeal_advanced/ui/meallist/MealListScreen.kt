@@ -85,15 +85,21 @@ private fun MealRow(state: MealRowUiState, onEvent: (MealListEvent) -> Unit) {
             )
         }
         if (state.expanded) {
-            GlassCard(
-                Modifier.fillMaxWidth().clickable { onEvent(MealListEvent.MealSelected(state.mealId)) },
-                radius = 16.dp, opacity = .6f, padding = 12.dp,
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    MealPhotoPlaceholder(Modifier.size(64.dp))
-                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text(state.foodSummary, style = MaterialTheme.typography.titleSmall)
-                        Text(state.nutrientSummary, style = MaterialTheme.typography.bodySmall)
+            if (state.items.isEmpty()) {
+                Text("등록된 음식 없음", style = MaterialTheme.typography.bodyMedium)
+            }
+            state.items.forEach { food ->
+                GlassCard(
+                    Modifier.fillMaxWidth().clickable { onEvent(MealListEvent.MealSelected(state.mealId)) },
+                    radius = 16.dp, opacity = .6f, padding = 12.dp,
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        MealPhotoPlaceholder(Modifier.size(64.dp))
+                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Text(food.name, style = MaterialTheme.typography.titleSmall)
+                            Text("${food.amountLabel} · ${food.energyLabel} kcal", style = MaterialTheme.typography.bodySmall)
+                            Text(food.nutrientSummary, style = MaterialTheme.typography.bodySmall)
+                        }
                     }
                 }
             }

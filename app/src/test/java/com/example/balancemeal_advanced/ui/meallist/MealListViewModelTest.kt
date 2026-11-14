@@ -63,8 +63,12 @@ class MealListViewModelTest {
         assertEquals(1, dateUi.meals.size)
         val mealUi = dateUi.meals.first()
         assertEquals("점심", mealUi.label)
-        assertEquals("Apple 외 1개", mealUi.foodSummary)
         assertEquals("250", mealUi.energyLabel)
+        assertEquals(listOf("Apple", "Chicken"), mealUi.items.map { it.name })
+        assertEquals(listOf("200g", "100g"), mealUi.items.map { it.amountLabel })
+        assertEquals(listOf("100", "150"), mealUi.items.map { it.energyLabel })
+        assertEquals("탄수화물 20g, 단백질 0g, 지방 0g", mealUi.items[0].nutrientSummary)
+        assertEquals("탄수화물 0g, 단백질 30g, 지방 5g", mealUi.items[1].nutrientSummary)
 
         // 200g apple -> C: 20
         // 100g chicken -> P: 30, F: 5
@@ -151,6 +155,34 @@ class MealListViewModelTest {
         vm.dismissDatePicker()
         runCurrent()
         assertFalse(vm.state.value.showDatePicker)
+        sub.cancel()
+    }
+
+    @Test fun rangeSubmittedCalculatesPeriodBasedOnSelectedTab() = scenario { vm, _, _ ->
+        val sub = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect() }
+        val targetEnd = LocalDate.of(2026, 5, 20)
+
+        vm.handleEvent(MealListEvent.PeriodSelected(PeriodTab.WEEK))
+        runCurrent()
+        vm.handleEvent(MealListEvent.RangeSubmitted(targetEnd, targetEnd))
+        runCurrent()
+        assertEquals(PeriodTab.WEEK, vm.state.value.period.selected)
+        assertTrue(vm.state.value.period.rangeLabel.contains("2026.05.13 ~ 2026.05.20"))
+
+        vm.handleEvent(MealListEvent.PeriodSelected(PeriodTab.MONTH))
+        runCurrent()
+        vm.handleEvent(MealListEvent.RangeSubmitted(targetEnd, targetEnd))
+        runCurrent()
+        assertEquals(PeriodTab.MONTH, vm.state.value.period.selected)
+        assertTrue(vm.state.value.period.rangeLabel.contains("2026.04.20 ~ 2026.05.20"))
+
+        vm.handleEvent(MealListEvent.PeriodSelected(PeriodTab.DAY))
+        runCurrent()
+        vm.handleEvent(MealListEvent.RangeSubmitted(targetEnd, targetEnd))
+        runCurrent()
+        assertEquals(PeriodTab.DAY, vm.state.value.period.selected)
+        assertTrue(vm.state.value.period.rangeLabel.contains("2026.05.20 ~ 2026.05.20"))
+
         sub.cancel()
     }
 }

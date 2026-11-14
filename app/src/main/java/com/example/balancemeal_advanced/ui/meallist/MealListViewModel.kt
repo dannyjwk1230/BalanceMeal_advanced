@@ -29,13 +29,14 @@ class MealListViewModel(
         period = PeriodUiState(
             selected = PeriodTab.MONTH,
             rangeLabel = "",
-            description = "최근 1개월"
+            description = "종료일을 입력해주세요"
         )
     ))
     val state: StateFlow<MealListUiState> = _state.asStateFlow()
 
     private var currentStart: LocalDate = timeSource.now().toLocalDate().minusMonths(1)
-    private var currentEnd: LocalDate = timeSource.now().toLocalDate()
+    var currentEnd: LocalDate = timeSource.now().toLocalDate()
+        private set
 
     private val expandedMeals = mutableSetOf<String>()
 
@@ -115,7 +116,17 @@ class MealListViewModel(
                     foodSummary = foodSummary,
                     energyLabel = mealEnergy.toString(),
                     nutrientSummary = nutrientSummary,
-                    expanded = expandedMeals.contains(meal.id)
+                    expanded = expandedMeals.contains(meal.id),
+                    items = meal.items.map { item ->
+                        val food = allFoods[item.foodCode]
+                        val portion = food?.nutrientsPer100?.forPortion(item.amount)
+                        MealFoodRowUiState(
+                            name = food?.name ?: "알 수 없는 음식",
+                            amountLabel = "${item.amount.roundToInt()}${food?.unit?.symbol ?: "g"}",
+                            energyLabel = (portion?.energyKcal?.roundToInt() ?: 0).toString(),
+                            nutrientSummary = "탄수화물 ${portion?.carbohydrateG?.roundToInt() ?: 0}g, 단백질 ${portion?.proteinG?.roundToInt() ?: 0}g, 지방 ${portion?.fatG?.roundToInt() ?: 0}g"
+                        )
+                    }
                 )
             }
 
@@ -137,7 +148,7 @@ class MealListViewModel(
 
         val formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd")
         val label = "${start.format(formatter)} ~ ${end.format(formatter)}"
-        val description = tab?.label ?: "직접 설정"
+        val description = "종료일을 입력해주세요"
 
         _state.update {
             it.copy(
@@ -168,7 +179,17 @@ class MealListViewModel(
                 _state.update { it.copy(showDatePicker = true) }
             }
             is MealListEvent.RangeSubmitted -> {
-                updateDateRange(event.start, event.end)
+                if (event.start == event.end) {
+                    val endDate = event.end
+                    val (calculatedStart, tab) = when (_state.value.period.selected) {
+                        PeriodTab.DAY -> endDate to PeriodTab.DAY
+                        PeriodTab.WEEK -> endDate.minusWeeks(1) to PeriodTab.WEEK
+                        PeriodTab.MONTH -> endDate.minusMonths(1) to PeriodTab.MONTH
+                    }
+                    updateDateRange(calculatedStart, endDate, tab)
+                } else {
+                    updateDateRange(event.start, event.end)
+                }
             }
             is MealListEvent.MealExpansionRequested -> {
                 if (expandedMeals.contains(event.mealId)) {
