@@ -70,7 +70,7 @@ fun BalanceMealApp(
     myViewModel.hasPhotoChanges = { profileViewModel.state.value.draftPhoto != null }
     myViewModel.photoBusy = { profileViewModel.state.value.savingPhoto }
     myViewModel.discardPhoto = profileViewModel::discardPhoto
-    val profile by profileViewModel.state.collectAsState()
+    val profile by profileViewModel.state.collectAsStateWithLifecycle()
     val photoPicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri -> profileViewModel.selectPhoto(uri?.toString()) }
     val recordGallery=rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) {uri -> recordViewModel.galleryResult(uri?.toString())}
     val recordCamera=rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) {success -> recordViewModel.cameraResult(success)}
@@ -134,8 +134,6 @@ fun BalanceMealApp(
         )
     }
     val requestBack: () -> Unit = { requests.request(NavigationRequest.Back) }
-    val listInitial = remember { MealListUiState() }
-    val analysisInitial = remember { AnalysisUiState() }
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val useRail = AppWindowClass.fromWidth(maxWidth)!=AppWindowClass.COMPACT
         CompositionLocalProvider(LocalAppWindowWidth provides maxWidth) {
@@ -157,8 +155,8 @@ fun BalanceMealApp(
                             HomeScreen(home,
                             onRecord = { requests.request(NavigationRequest.Open(AppDestination.RECORD)) },
                             onBody = { requests.request(NavigationRequest.Open(AppDestination.MY, MySection.BODY_SETTINGS)) },
-                            onRetry=homeViewModel::retry,
-                            onEnableBody=homeViewModel::enableBodyCalculation,
+                            onRetry={ homeViewModel.retry() },
+                            onEnableBody={ homeViewModel.enableBodyCalculation() },
                         )
                             // Destination handlers compose after NavHost's own predictive handler.
                             // Keep system Back behind the same permission boundary as app controls.
@@ -166,16 +164,28 @@ fun BalanceMealApp(
                         }
                         composable<Routes.Record> {
                             LaunchedEffect(Unit) {recordViewModel.onEnter()}
-                            val record by recordViewModel.state.collectAsState()
+                            val record by recordViewModel.state.collectAsStateWithLifecycle()
                             var showMealDatePicker by rememberSaveable { mutableStateOf(false) }
                             RecordScreen(record,
                                 onDate = { showMealDatePicker = true },
                                 onMeal = { recordViewModel.requestSelection(RecordSelection.Meal(it)) },
-                                onAmount=recordViewModel::setAmount,onRemove=recordViewModel::remove,onOpenPicker=recordViewModel::openPicker,
-                                onClosePicker=recordViewModel::closePicker,onSearch=recordViewModel::search,onChoose=recordViewModel::choose,
-                                onAddAmount=recordViewModel::addAmount,onAdd=recordViewModel::addSelected,onRetry=recordViewModel::retry,
-                                onPersist=recordViewModel::requestPersist,onConfirmPersist=recordViewModel::confirmPersist,onDismissDialog=recordViewModel::dismissDialog,onDiscard=recordViewModel::confirmDiscard,
-                                onGallery=recordViewModel::beginGallery,onCamera=recordViewModel::beginCamera,onRemovePhoto=recordViewModel::removePhoto)
+                                onAmount={ id, amt -> recordViewModel.setAmount(id, amt) },
+                                onRemove={ id -> recordViewModel.remove(id) },
+                                onOpenPicker={ recordViewModel.openPicker() },
+                                onClosePicker={ recordViewModel.closePicker() },
+                                onSearch={ q -> recordViewModel.search(q) },
+                                onChoose={ code -> recordViewModel.choose(code) },
+                                onAddAmount={ amt -> recordViewModel.addAmount(amt) },
+                                onAdd={ recordViewModel.addSelected() },
+                                onRetry={ recordViewModel.retry() },
+                                onPersist={ recordViewModel.requestPersist() },
+                                onConfirmPersist={ recordViewModel.confirmPersist() },
+                                onDismissDialog={ recordViewModel.dismissDialog() },
+                                onDiscard={ recordViewModel.confirmDiscard() },
+                                onGallery={ recordViewModel.beginGallery() },
+                                onCamera={ recordViewModel.beginCamera() },
+                                onRemovePhoto={ recordViewModel.removePhoto() }
+                            )
                             if (showMealDatePicker) WheelDatePicker(
                                 mode = DatePickerMode.MEAL,
                                 initialDate = record.key.date,
@@ -185,30 +195,77 @@ fun BalanceMealApp(
                             )
                             BackHandler(enabled = !showMealDatePicker, onBack = requestBack)
                         }
-                        // Team wiring seam: ALL list/analysis events intentionally remain unhandled in P04.
-                        // Do not introduce repositories, fake requests, local expansion, or temporary ViewModels here.
                         composable<Routes.MealList> {
-                            MealListScreen(listInitial, onEvent = { _ -> })
+                            val listViewModel: MealListViewModel = viewModel(factory = featureFactory { MealListViewModel(dependencies.meals, dependencies.foods, dependencies.time) })
+                            val listState by listViewModel.state.collectAsStateWithLifecycle()
+                            
+                            MealListScreen(listState, onEvent = listViewModel::handleEvent)
+                            
+                            if (listState.showDatePicker) {
+                                WheelDatePicker(
+                                    mode = DatePickerMode.MEAL,
+                                    initialDate = dependencies.time.now().toLocalDate(),
+                                    today = dependencies.time.now().toLocalDate(),
+                                    onSelect = { dateStr -> 
+                                        val d = LocalDate.parse(dateStr)
+                                        listViewModel.handleEvent(MealListEvent.RangeSubmitted(d, d)) 
+                                    },
+                                    onDismissRequest = listViewModel::dismissDatePicker,
+                                )
+                            }
+                            
                             BackHandler(onBack = requestBack)
                         }
                         composable<Routes.Analysis> {
-                            AnalysisScreen(analysisInitial, onEvent = { _ -> })
+                            val analysisViewModel: AnalysisViewModel = viewModel(factory = featureFactory { AnalysisViewModel(dependencies.meals, dependencies.foods, dependencies.settings, dependencies.time) })
+                            val analysisState by analysisViewModel.state.collectAsStateWithLifecycle()
+                            
+                            AnalysisScreen(analysisState, onEvent = { event ->
+                                if (event == AnalysisEvent.BodySettingsRequested) {
+                                    requests.request(NavigationRequest.Open(AppDestination.MY, MySection.BODY_SETTINGS))
+                                } else {
+                                    analysisViewModel.handleEvent(event)
+                                }
+                            })
+                            
+                            if (analysisState.showDatePicker) {
+                                WheelDatePicker(
+                                    mode = DatePickerMode.MEAL,
+                                    initialDate = dependencies.time.now().toLocalDate(),
+                                    today = dependencies.time.now().toLocalDate(),
+                                    onSelect = { dateStr ->
+                                        val d = LocalDate.parse(dateStr)
+                                        analysisViewModel.handleEvent(AnalysisEvent.RangeSubmitted(d, d))
+                                    },
+                                    onDismissRequest = analysisViewModel::dismissDatePicker,
+                                )
+                            }
+                            
                             BackHandler(onBack = requestBack)
                         }
                         composable<Routes.My> { backStack ->
                             val route = backStack.toRoute<Routes.My>()
-                            val state by myViewModel.state.collectAsState()
+                            val state by myViewModel.state.collectAsStateWithLifecycle()
                             val lifecycleOwner = LocalLifecycleOwner.current
                             DisposableEffect(lifecycleOwner, myViewModel) {
                                 val observer = LifecycleEventObserver { _, event -> if (event == Lifecycle.Event.ON_RESUME) myViewModel.refreshTargets() }
                                 lifecycleOwner.lifecycle.addObserver(observer)
                                 onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
                             }
-                            MyScreen(state, profile.copy(bitmap = profile.draftBitmap ?: profile.bitmap), myViewModel::nickname, myViewModel::edit,
-                                myViewModel::requestNickname, myViewModel::requestBody, myViewModel::confirm, myViewModel::dismiss,
-                                myViewModel::confirmDiscard, { photoPicker.launch("image/*") }, route.section == MySection.BODY_SETTINGS.name, route.entry,
-                                onCalculationEnabled = myViewModel::setCalculationEnabled,
-                                today = dependencies.time.now().toLocalDate())
+                            MyScreen(state, profile.copy(bitmap = profile.draftBitmap ?: profile.bitmap), 
+                                onNickname = { myViewModel.nickname(it) }, 
+                                onDraft = { myViewModel.edit(it) },
+                                onRequestNickname = { myViewModel.requestNickname() }, 
+                                onRequestBody = { myViewModel.requestBody() }, 
+                                onConfirm = { myViewModel.confirm() }, 
+                                onDismiss = { myViewModel.dismiss() },
+                                onDiscard = { myViewModel.confirmDiscard() }, 
+                                onPhoto = { photoPicker.launch("image/*") }, 
+                                focusBody = route.section == MySection.BODY_SETTINGS.name, 
+                                entry = route.entry,
+                                onCalculationEnabled = { myViewModel.setCalculationEnabled(it) },
+                                today = dependencies.time.now().toLocalDate()
+                            )
                             BackHandler(onBack = requestBack)
                         }
                     }

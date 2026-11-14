@@ -23,6 +23,11 @@ internal class RoomMealRepository(
             rows.map { it.toDomain() }.sortedBy { it.mealType.ordinal }
         }
 
+    override fun observeBetweenDates(start: LocalDate, end: LocalDate): Flow<List<MealRecord>> =
+        dao.observeBetweenDates(start.toString(), end.toString()).map { rows ->
+            rows.map { it.toDomain() }.sortedWith(compareByDescending<MealRecord> { it.date }.thenBy { it.mealType.ordinal })
+        }
+
     override fun observeMeal(date: LocalDate, mealType: MealType): Flow<MealRecord?> =
         dao.observeMeal(date.toString(), mealType.name).map { it?.toDomain() }
 

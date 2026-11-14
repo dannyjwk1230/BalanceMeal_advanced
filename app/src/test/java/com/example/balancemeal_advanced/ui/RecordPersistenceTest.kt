@@ -25,6 +25,7 @@ class RecordPersistenceTest {
         override suspend fun getMeal(date:LocalDate,mealType:MealType)=records[RecordKey(date,mealType)]
         override suspend fun getMeal(id:String)=records.values.firstOrNull {it.id==id}
         override fun observeOnDate(date:LocalDate)=flowOf(records.values.filter {it.date==date})
+        override fun observeBetweenDates(start: LocalDate, end: LocalDate) = flowOf(records.values.filter { !it.date.isBefore(start) && !it.date.isAfter(end) })
         override fun observeMeal(date:LocalDate,mealType:MealType)=flowOf(records[RecordKey(date,mealType)])
         private suspend fun writing(){attempts++;gate?.await();check(!fail){"Injected storage failure"}}
         override suspend fun createMeal(date:LocalDate,mealType:MealType,items:List<MealItem>,photoReference:String?):MealRecord {

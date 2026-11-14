@@ -36,11 +36,14 @@ fun MealListScreen(state: MealListUiState, onEvent: (MealListEvent) -> Unit, mod
             MealDateCard(day, onEvent)
         }
     },secondary={
-        // Team-owned selection/detail data is deliberately not connected.
-        GlassCard(Modifier.fillMaxWidth().testTag("list_detail_placeholder")) {
-            Text("식단 상세",style=MaterialTheme.typography.titleMedium)
-            MealPhotoPlaceholder(Modifier.fillMaxWidth().aspectRatio(4f/3f))
-            Text("목록에서 식단을 선택하면 상세 내용을 확인할 수 있습니다.")
+        if (state.selectedDetail != null) {
+            MealDetailReference(state.selectedDetail, Modifier.fillMaxWidth())
+        } else {
+            GlassCard(Modifier.fillMaxWidth().testTag("list_detail_placeholder")) {
+                Text("식단 상세",style=MaterialTheme.typography.titleMedium)
+                MealPhotoPlaceholder(Modifier.fillMaxWidth().aspectRatio(4f/3f))
+                Text("목록에서 식단을 선택하면 상세 내용을 확인할 수 있습니다.")
+            }
         }
     })
 }

@@ -43,6 +43,10 @@ internal interface MealDao {
     fun observeMeal(date: String, type: String): Flow<MealWithItems?>
 
     @Transaction
+    @Query("SELECT * FROM meal_records WHERE date >= :start AND date <= :end ORDER BY date DESC")
+    fun observeBetweenDates(start: String, end: String): Flow<List<MealWithItems>>
+
+    @Transaction
     @Query("SELECT * FROM meal_records WHERE date = :date AND mealType = :type")
     suspend fun getMeal(date: String, type: String): MealWithItems?
 

@@ -21,6 +21,7 @@ class StoredDataException(message: String, cause: Throwable? = null) : Exception
 
 interface MealRepository {
     fun observeOnDate(date: LocalDate): Flow<List<MealRecord>>
+    fun observeBetweenDates(start: LocalDate, end: LocalDate): Flow<List<MealRecord>>
     fun observeMeal(date: LocalDate, mealType: MealType): Flow<MealRecord?>
     suspend fun getMeal(date: LocalDate, mealType: MealType): MealRecord?
     suspend fun getMeal(id: String): MealRecord?

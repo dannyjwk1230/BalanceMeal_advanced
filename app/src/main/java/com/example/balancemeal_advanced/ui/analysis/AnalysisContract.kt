@@ -20,6 +20,7 @@ data class AnalysisUiState(
     val periodEnergyLabel: String = "—",
     val meals: List<AnalysisMealUiState> = listOf("조식", "중식", "석식", "간식·음료").map { AnalysisMealUiState(it) },
     val bodyNotice: String = "현재 저장된 신체 정보를 기준으로 평가합니다. 신체 정보가 변경되면 목표 섭취량과 분석 코멘트가 달라질 수 있습니다.",
+    val showDatePicker: Boolean = false,
 )
 sealed interface AnalysisEvent {
     data class PeriodSelected(val period: PeriodTab) : AnalysisEvent
