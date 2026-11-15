@@ -1,6 +1,7 @@
 # BalanceMeal
 
 모바일소프트웨어 프로젝트 · **정연호 · 최서윤**
+
 GitHub 저장소 링크 : https://github.com/dannyjwk1230/BalanceMeal_advanced
 
 ## 앱 소개
