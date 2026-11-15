@@ -28,6 +28,8 @@ BalanceMeal은 음식과 섭취량을 기록하고 탄수화물·단백질·지�
 | 빌드 도구 | Gradle Wrapper 9.6.0 · AGP 9.5.1 |
 | Kotlin / Compose BOM | 2.2.10 / 2026.02.01 |
 
+**시연 영상 링크:** [https://youtu.be/O_17mJRxf44](https://youtu.be/O_17mJRxf44)
+
 최초 빌드 시 Gradle 및 의존성 다운로드를 위한 인터넷 연결이 필요하다. 앱 실행은 서버 연결 없이 가능하다.
 
 ### Android Studio에서 실행
